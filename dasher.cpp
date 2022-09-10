@@ -8,8 +8,8 @@ int main()
     //initialize window
     InitWindow(WindowWidth, WindowHeight, "Dapper-Dasher");
     
-    //acceleration due to gravity
-    const int gravity{1};
+    //acceleration due to gravity (pixels/s)/s
+    const int gravity{1'000};
 
     //textures
     Texture2D scarfy = LoadTexture("textures/scarfy.png");
@@ -23,14 +23,25 @@ int main()
     scarfyPos.y = WindowHeight - scarfyRec.height;
 
     int velocity{0};
-
     bool isInAir;
-    //jump velocity
-    const int jumpVelocity{-22};
+
+    //jump velocity (pixels/second)
+    const int jumpVelocity{-600};
+
+    //animation frame
+    int frame{};
+
+    //amount of time before we update the animation frame
+    const float updateTime{1.0/12.0};
+
+    float runningTime{};
 
     SetTargetFPS(60);
     while(!WindowShouldClose())
     {
+        //delta time (time since last frame)
+        const float deltaTime{GetFrameTime()};
+
         //start drawing
         BeginDrawing();
         ClearBackground(WHITE);
@@ -38,13 +49,13 @@ int main()
         //ground check
         if (scarfyPos.y >= WindowHeight - scarfyRec.height)
         {
-            isInAir = false;
             velocity = 0;
+            isInAir = false;
         }
         else
         {
+            velocity += gravity * deltaTime;
             isInAir = true;
-            velocity += gravity;
         }
 
         //jump on space key pressed
@@ -53,7 +64,24 @@ int main()
             velocity += jumpVelocity;
         }
         
-        scarfyPos.y += velocity;
+        //update the position
+        scarfyPos.y += velocity * deltaTime;
+
+        // update running time
+        runningTime += deltaTime;
+
+        if (runningTime >= updateTime)
+        {
+            runningTime = 0;
+            //update animation frame
+            scarfyRec.x = frame * scarfyRec.width;
+            frame++;
+            if (frame > 5)
+            {
+                frame = 0;
+            }
+        }
+
         DrawTextureRec(scarfy, scarfyRec, scarfyPos, WHITE);
 
         //stop drawing
